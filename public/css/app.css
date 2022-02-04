@@ -1,0 +1,16 @@
+html, body {
+    background-color: yellowgreen;
+}
+
+h1 {
+    text-transform: uppercase;
+}
+
+#error{
+    color:red;
+    text-transform: uppercase;
+}
+
+.container{
+    display: none;
+}
