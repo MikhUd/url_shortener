@@ -3,7 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Services\ShortenUrlService;
-use Illuminate\Http\Request;
+use App\Http\Resources\UrlResource;
+use App\Http\Requests\UrlRequest;
 use Illuminate\Support\Facades\Redirect;
 
 class ShortUrlController extends Controller
@@ -15,17 +16,9 @@ class ShortUrlController extends Controller
         $this->urlService = $urlService;
     }
 
-    public function shortenUrl(Request $request)
+    public function shortenUrl(UrlRequest $request)
     {
-        if (!$request->url) {
-            return array('error' => 'URL is empty!');
-        }
-
-        if (!$this->urlService->checkUrlExists($longUrl = $request->url)) {
-            return array('error' => 'You have entered a non-existent url');
-        }
-
-        return $this->urlService->tryToGetShortenUrlByLongUrl($longUrl);
+        return $this->urlService->tryToGetShortenOrDeleteExpiredUrlByLongUrl($request->url);
     }
 
     public function redirectToUrl(string $token)

@@ -16,17 +16,17 @@ $(document).ready(function(){
             data: {
                 'url' : $('#url').val()
             },
-            success: function(data) {
-                data = JSON.parse(data);
-                if (data.error) {
-                    $('#error').html(data.error);
-                    $('.container').css("display", "none");
-                } else {
-                    $('#error').html('');
-                    $('.container').css("display", "block");
-                    $('#long_url').html(data.long_url);
-                    $('#shorten_url').html(window.location.href + data.token);
-                }
+            success: function (data) {
+                shortenUrl = JSON.parse(data);
+                $('#error').html('');
+                $('.container').css("display", "block");
+                $('#long_url').html(shortenUrl.long_url);
+                $('#shorten_url').html(window.location.href + shortenUrl.token);
+            },
+            error: function (data) {
+                errors = JSON.parse(data.responseText);
+                $('#error').html(errors.errors.url);
+                $('.container').css("display", "none");
             }
         });
     });

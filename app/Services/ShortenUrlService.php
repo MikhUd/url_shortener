@@ -5,6 +5,8 @@ namespace App\Services;
 use App\Models\ShortenUrl;
 use App\Repositories\Eloquent\UrlRepository;
 use Carbon\Carbon;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Http\JsonResponse;
 
 class ShortenUrlService
 {
@@ -54,23 +56,33 @@ class ShortenUrlService
     }
 
     /**
-     * Возвращает короткую ссылку.
+     * Возвращает короткую ссылку или удаляет с истекшим токеном.
      *
-     * @return ShortenUrl
+     * @return string
      */
-    public function tryToGetShortenUrlByLongUrl(string $longUrl): ?ShortenUrl
+    public function tryToGetShortenOrDeleteExpiredUrlByLongUrl(string $longUrl): string
     {
-        $shortenUrl = $this->urlRepository->getShortenUrlByLongUrl($longUrl);
+        if (!$this->checkUrlExists($longUrl)) {
+            throw new HttpResponseException(
+                response()->json([
+                    'errors' => [
+                        'url' => 'Url does not exists',
+                    ]
+                ], JsonResponse::HTTP_UNPROCESSABLE_ENTITY)
+            );
+        }
+
+        $shortenUrl = $this->getShortenUrlByLongUrl($longUrl);
 
         if ($shortenUrl && Carbon::parse($shortenUrl->expired_at)->gt(now())) {  
-            return $shortenUrl;
+            return $shortenUrl->toJson();
         }
         
         if ($shortenUrl) {
             $this->deleteExpiredUrl($shortenUrl);
         }
-         
-        return $this->createShortenUrl($longUrl);
+        
+        return $this->createShortenUrl($longUrl)->toJson();
     }
 
     /**
@@ -107,5 +119,10 @@ class ShortenUrlService
     public function deleteExpiredUrl(ShortenUrl $shortenUrl): void
     {
         $this->urlRepository->delete($shortenUrl);
+    }
+
+    public function getShortenUrlByLongUrl(string $longUrl)
+    {
+        return $this->urlRepository->getShortenUrlByLongUrl($longUrl);
     }
 }
